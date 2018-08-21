@@ -62,7 +62,7 @@ public class TabFailFragment extends Fragment {
             // 목표DB를 저장할 items
             tempItems = ((HomeActivity) getActivity()).getItems();
             for(int i=0;i<tempItems.size();i++){
-                //type이 success인 것만 가져옴
+                //type이 fail 것만 가져옴
                 if(tempItems.get(i).getType().equals("fail")){
                     items.add(tempItems.get(i));
                 }

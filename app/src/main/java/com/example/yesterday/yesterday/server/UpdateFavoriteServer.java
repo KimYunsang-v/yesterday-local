@@ -23,11 +23,11 @@ public class UpdateFavoriteServer extends AsyncTask<Void,Void,String> {
 
     //owl wifi 로컬 -> 192.168.0.75
     //조교서버 -> 117.17.142.207
-    private static final String  WEBIP = "192.168.0.75";
+    private static final String  WEBIP = "117.17.142.207";
 
     //addGoalActivity에서 등록한 정보 생성자로 받는다.
-    public UpdateFavoriteServer(String userID, String food, String type, int favorite) {
-        this.userID = userID;
+    public UpdateFavoriteServer( String food, String type, int favorite) {
+       // this.userID = userID;
         this.food = food;
         this.favorite = favorite;
         this.type = type;
@@ -41,7 +41,7 @@ public class UpdateFavoriteServer extends AsyncTask<Void,Void,String> {
         RequestBody requestBody = null;
 
         //보낼 데이터를 파라미터 형식으로 body에 넣음
-        requestBody = new FormBody.Builder().add("USERID",userID).add("FOOD",food)
+        requestBody = new FormBody.Builder().add("FOOD",food)
                 .add("FAVORITE",""+favorite).add("TYPE",type)
                 .build();
 

@@ -5,7 +5,6 @@ import android.os.Parcelable;
 
 public class RecyclerItem  implements Parcelable {
 
-    String userID;
     String food;
     int count;
     String startDate;
@@ -23,8 +22,7 @@ public class RecyclerItem  implements Parcelable {
 
     //count 랑 favorite DB에는 int로  정의 되어있음
 
-    public RecyclerItem(String userID,String food,int count,String startDate,String endDate,int favorite,String type){
-        this.userID = userID;
+    public RecyclerItem(String food,int count,String startDate,String endDate,int favorite,String type){
         this.food = food;
         this.count = count;
         this.startDate = startDate;
@@ -35,7 +33,6 @@ public class RecyclerItem  implements Parcelable {
 
     //Fragment 간 리스트 전달 하기 위함
     protected RecyclerItem(Parcel in) {
-        userID = in.readString();
         food = in.readString();
         count = in.readInt();
         startDate = in.readString();
@@ -47,7 +44,6 @@ public class RecyclerItem  implements Parcelable {
     //Fragment 간 리스트 전달 하기 위함
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(userID);
         dest.writeString(food);
         dest.writeInt(count);
         dest.writeString(startDate);
@@ -75,9 +71,6 @@ public class RecyclerItem  implements Parcelable {
         }
     };
 
-    public void setUserID(String userID){ this.userID =userID; }
-    public String getUserID(){ return userID; }
-
     public void setFood(String food){ this.food = food; }
     public String getFood(){ return food; }
 
@@ -98,5 +91,4 @@ public class RecyclerItem  implements Parcelable {
 
     public void setType(String type){ this.type = type; }
     public String getType(){ return type; }
-
 }

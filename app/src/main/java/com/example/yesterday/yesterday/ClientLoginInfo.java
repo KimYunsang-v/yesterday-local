@@ -4,6 +4,15 @@ import java.io.Serializable;
 
 public class ClientLoginInfo implements Serializable{
     private String name,type,gender,birth,id,pass;
+    private boolean log;
+
+    public boolean isLog() {
+        return log;
+    }
+
+    public void setLog(boolean log) {
+        this.log = log;
+    }
 
     public String getId() {
         return id;

@@ -16,11 +16,13 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.example.yesterday.yesterday.ClientLoginInfo;
 import com.example.yesterday.yesterday.PushAlarm.AlarmProgressReceiver;
 import com.example.yesterday.yesterday.R;
 
+import com.example.yesterday.yesterday.RecyclerView.FoodItem;
 import com.example.yesterday.yesterday.RecyclerView.RecyclerItem;
 import com.example.yesterday.yesterday.UI.HomeFrags.AddFragment;
 import com.example.yesterday.yesterday.UI.HomeFrags.GoalFragment;
@@ -30,8 +32,12 @@ import com.example.yesterday.yesterday.server.CheckTypeServer;
 import com.example.yesterday.yesterday.server.DeleteGoalServer;
 import com.example.yesterday.yesterday.server.SelectGoalServer;
 import com.example.yesterday.yesterday.server.SelectGroupByGoalServer;
+import com.example.yesterday.yesterday.sqlite.ClientGoalDB;
+import com.example.yesterday.yesterday.sqlite.FoodDataDB;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.kakao.usermgmt.UserManagement;
+import com.kakao.usermgmt.callback.LogoutResponseCallback;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
@@ -69,7 +75,7 @@ public class HomeActivity extends AppCompatActivity {
     private PrimaryDrawerItem item2 = new PrimaryDrawerItem().withIdentifier(2).withName("홈_첫번째").withIcon(R.drawable.ic_wb_sunny_black_24dp).withIconTintingEnabled(true);
     private PrimaryDrawerItem item3 = new PrimaryDrawerItem().withIdentifier(3).withName("홈_두번째").withIcon(R.drawable.ic_help_outline_black_24dp).withIconTintingEnabled(true);
     private PrimaryDrawerItem item4 = new PrimaryDrawerItem().withIdentifier(4).withName("섹션_첫번째").withIcon(R.drawable.ic_settings_black_24dp).withIconTintingEnabled(true);
-    private PrimaryDrawerItem item5 = new PrimaryDrawerItem().withIdentifier(5).withName("우엉우엉이짱").withIcon(R.drawable.ic_playlist_add_black_24dp).withIconTintingEnabled(true);
+    private PrimaryDrawerItem logout = new PrimaryDrawerItem().withIdentifier(5).withName("로그아웃").withIcon(R.drawable.ic_playlist_add_black_24dp).withIconTintingEnabled(true);
 
     private SecondaryDrawerItem sectionHeader = new SecondaryDrawerItem().withName("section_header");
 
@@ -87,10 +93,26 @@ public class HomeActivity extends AppCompatActivity {
     //Canlendar Icon
     private ImageView calendarView;
 
+    // clientGoalDB 객체
+    ClientGoalDB clientGoalDB;
+
+    // clientGoalDB 객체
+    FoodDataDB foodDataDB;
+
+    /*//SharedPreferences
+    SharedPreferences loginSetting;
+    SharedPreferences.Editor editor;*/
+
+    /*//client
+    ClientLoginInfo client;*/
     //ClientGoal DB 연동 결과값
     String result;
     //각 Fragment에서 items가 필요할 때 공유하기 위한 변수
-    private ArrayList<RecyclerItem> items;
+    private ArrayList<RecyclerItem> goalItems;
+
+    // 모든 음식 데이터
+    private ArrayList<FoodItem> foodItems;
+
 
     public HomeActivity() {
 
@@ -101,24 +123,36 @@ public class HomeActivity extends AppCompatActivity {
         fragmentManager = getSupportFragmentManager();
         //handler = new Handler();
 
+        // DB객체 초기화
+        clientGoalDB = new ClientGoalDB(this,"Info",null,1);
+        foodDataDB = new FoodDataDB(this,"Info",null,1);
+
         //Fragment
         homeFragment = new HomeFragment();
         addFragment = new AddFragment();
         goalFragment = new GoalFragment();
         statisticsFragment = new StatisticsFragment();
 
-        items = new ArrayList<RecyclerItem>();
+        // 목표 데이터
+        goalItems = new ArrayList<RecyclerItem>();
+        //모든 음식 데이터
+        foodItems = new ArrayList<FoodItem>();
 
         //파싱된 데이터를 메소드를 통해 items에 대입
-        items = getClientGoal();
+        // 목표 데이터 가져옴
+        goalItems = clientGoalDB.selectGoal();
         //fooddata를 조회해 해당되는 food의 개수를 가져옴
         //TODO: fooddata 값을 가져오긴 하는데 기간 조회가 어려움
-        items = getCurrentCount();
+
+        // 모든 음식 데이터 가져오기
+        foodItems = foodDataDB.selectAll();
+
+        getCurrentCount();
 
         //fail인 아이템 currentCount 초기화
-        for (int i = 0; i < items.size(); i++) {
-            if (items.get(i).getType().equals("fail")) {
-                items.get(i).setCurrentCount(items.get(i).getCount());
+        for (int i = 0; i < goalItems.size(); i++) {
+            if (goalItems.get(i).getType().equals("fail")) {
+                goalItems.get(i).setCurrentCount(goalItems.get(i).getCount());
             }
         }
         //오늘 날짜와 목표설정 마감일을 비교하여 type 업데이트!!
@@ -168,6 +202,10 @@ public class HomeActivity extends AppCompatActivity {
 
         Log.d("TAG", "onCreate / 앱 생성(초기화)");
 
+       /* //SharedPreference
+        loginSetting = getSharedPreferences("loginSetting", 0);
+        editor = loginSetting.edit();*/
+
         //10시 푸시 알림
         boolean isPush = true;
         if(isPush) {
@@ -178,6 +216,10 @@ public class HomeActivity extends AppCompatActivity {
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         //toolbar.setTitle("어제 점심 뭐 먹었지 ?");
 
+        //Intent로 client가져오기  -> client 아직 안쓰임
+       /* Intent intent  = getIntent();
+        client = (ClientLoginInfo) intent.getSerializableExtra("client");
+        Toast.makeText(getApplicationContext(), "로그인 되었습니다.", Toast.LENGTH_LONG).show();*/
         //Calendar
         //Calendar View로 넘어가면 밑에 바텀바 focus 어케 해결!?
         calendarView = (ImageView) findViewById(R.id.toolbar_calendar_button);
@@ -198,7 +240,7 @@ public class HomeActivity extends AppCompatActivity {
                 .withProfileImagesClickable(false)              //프로필이미지선택X
                 //.withSavedInstance(savedInstanceState)
                 .addProfiles(
-                        new ProfileDrawerItem().withName("woowonLee").withEmail("wwlee94@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
+                        new ProfileDrawerItem().withName("admin").withEmail("wwlee94@gmail.com").withIcon(getResources().getDrawable(R.drawable.profile))
                 )
                 .build();
         //create the drawer and remember the `Drawer` result object
@@ -210,13 +252,24 @@ public class HomeActivity extends AppCompatActivity {
                         item1, item2, item3,
                         new DividerDrawerItem(),
                         sectionHeader,
-                        item4, item5
+                        item4, logout
                 )
                 //drawer를 클릭 했을 때 이벤트 처리
                 .withOnDrawerItemClickListener(new Drawer.OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
-                        // do something with the clicked item :D
+
+                        /*if (drawerItem == logout) {
+                            if ((client.getType()).equals("회원")) {
+                                editor.clear();
+                                editor.commit();
+                            } else if ((client.getType()).equals("카카오")) {
+                                onClickLogout();
+                            }
+                            Toast.makeText(getApplicationContext(), "Logout", Toast.LENGTH_LONG).show();
+                            Intent intent  = new Intent(HomeActivity.this, LoginActivity.class);
+                            startActivity(intent);
+                        }*/
                         return true;
                     }
                 })
@@ -260,7 +313,7 @@ public class HomeActivity extends AppCompatActivity {
         Gson gson = new Gson();
         Type listType = new TypeToken<ArrayList<RecyclerItem>>() {
         }.getType();
-        String json = gson.toJson(items, listType);
+        String json = gson.toJson(goalItems, listType);
         editor.putString("ITEM", json);
         editor.commit();
     }
@@ -274,11 +327,11 @@ public class HomeActivity extends AppCompatActivity {
 
     // DB 연동해서 Select
     // 현재 로그인한 id에 해당하는 목표들을 가져오는 메소드
-    public ArrayList<RecyclerItem> getClientGoal() {
+   /* public ArrayList<RecyclerItem> getClientGoal() {
 
         result = null;
         //ClientGoal 데이터베이스에 접속해 JSONObject 결과값 받아오는 코드
-        try {
+        try {  //admin 에서 client name으로 바꾸면 에러남
             result = new SelectGoalServer("admin").execute().get();
         } catch (Exception e) {
             e.printStackTrace();
@@ -286,7 +339,8 @@ public class HomeActivity extends AppCompatActivity {
             //성공 , 실패 여부
             if (result.equals("fail")) {
                 Log.d("ClientGoal", "데이터 조회 실패");
-            } else {
+            }
+            else {
                 Log.d("ClientGoal", "데이터 조회 성공");
                 Log.d("ClientGoal", result);
             }
@@ -309,19 +363,20 @@ public class HomeActivity extends AppCompatActivity {
                 int favorite = list.getInt("FAVORITE");
                 String type = list.getString("TYPE");
                 //item에 파싱한 list 값을 넣어줌
-                items.add(new RecyclerItem(userID, food, count, startDate, endDate, favorite, type));
+                items.add(new RecyclerItem(food, count, startDate, endDate, favorite, type));
             }
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
         return items;
-    }
+    }*/
 
     //목표에 해당하는 음식을 먹은 횟수 조회
-    public ArrayList<RecyclerItem> getCurrentCount() {
+    public void getCurrentCount() {
 
-        result = null;
+        int count = 0;
+        /*result = null;
         //fooddata 데이터베이스에 접속해 JSONObject 결과값 받아오는 코드
         try {
             result = new SelectGroupByGoalServer("admin").execute().get();
@@ -335,32 +390,26 @@ public class HomeActivity extends AppCompatActivity {
                 Log.d("ClientGoal", "음식 개수 조회 성공");
                 Log.d("ClientGoal", result);
             }
-        }
+        }*/
 
-        try {
-            JSONObject jsonObject = new JSONObject(result);
-            JSONArray jsonArray = (JSONArray) jsonObject.get("FOODCOUNT");
 
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject list = (JSONObject) jsonArray.get(i);
-                String food = list.getString("FOOD");
-                int currentCount = list.getInt("CURRENTCOUNT");
+//            JSONObject jsonObject = new JSONObject(result);
+//            JSONArray jsonArray = (JSONArray) jsonObject.get("FOODCOUNT");
 
-                for (int k = 0; k < items.size(); k++) {
+            for (int i = 0; i < goalItems.size(); i++) {
+//                JSONObject list = (JSONObject) jsonArray.get(i);
+//                String food = list.getString("FOOD");
+//                int currentCount = list.getInt("CURRENTCOUNT");
+                String food = goalItems.get(i).getFood();
+                for (int k = 0; k < foodItems.size(); k++) {
                     //items의 food와 DB에서 가져온 food가 같다면 해당되는 items에 currentCount 데이터 입력
-                    if (items.get(k).getType().equals("default") || items.get(k).getType().equals("success")) {
-                        if (items.get(k).getFood().equals(food)) {
-                            items.get(k).setCurrentCount(currentCount);
+                    // fooditems 의 이름과 goalitems의 food 이름이 같다면 count 증가 나중에 날짜 비교 추가해야함
+                    if (foodItems.get(k).equals(food)) {
+                                count++;
                         }
                     }
-                }
-
+                goalItems.get(i).setCurrentCount(count);
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return items;
     }
 
     //날짜 비교 후 결과 값 도출
@@ -375,26 +424,26 @@ public class HomeActivity extends AppCompatActivity {
         Log.d("currentDate",format.format(currentDate));
 
         //검사 날짜
-        for(int i=0;i<items.size();i++) {
+        for(int i=0;i<goalItems.size();i++) {
             //index:-1 -> 삭제 안 일어남
             int index=-1;
-            if(items.get(i).getType().equals("default")) {
+            if(goalItems.get(i).getType().equals("default")) {
                 try {
-                    Date checkDate = format.parse(items.get(i).getEndDate());
+                    Date checkDate = format.parse(goalItems.get(i).getEndDate());
                     int check = currentDate.compareTo(checkDate);
                     //마감일이 지난 item들 currentDate > checkDate
                     if (check > 0) {
                         Log.d("currentDate > checkDate", format.format(checkDate));
 
                         //Type 변경 전 해당 음식의 type이 중복되는 지 Check!!
-                        for(int k=0;k<items.size();k++){
+                        for(int k=0;k<goalItems.size();k++){
                             //음식 이름이 같고 그 음식의 이름을 가진 타입 중 success가 있는 지 판별
-                            if(items.get(k).getFood().equals(items.get(i).getFood())){
-                                if(items.get(k).getType().equals("success")){
-
+                            if(goalItems.get(k).getFood().equals(goalItems.get(i).getFood())){
+                                if(goalItems.get(k).getType().equals("success")){
+                                    clientGoalDB.deleteGoal(goalItems.get(k).getFood(),goalItems.get(k).getType());
                                     //success 가 존재 한다면 지워
-                                    try{
-                                        result = new DeleteGoalServer("admin",items.get(k).getFood(),items.get(k).getType()).execute().get();
+                                    /*try{
+                                        result = new DeleteGoalServer(items.get(k).getFood(),items.get(k).getType()).execute().get();
                                         Log.d("delete 하는 items 값", items.get(k).getFood() + items.get(k).getType());
                                     }catch(Exception e){
                                         e.printStackTrace();
@@ -404,7 +453,7 @@ public class HomeActivity extends AppCompatActivity {
                                         }
                                         else{
                                             Log.d("DeleteGoalServer","데이터 삭제 실패");
-                                        }
+                                        }*/
 
                                         index=k;
 
@@ -429,7 +478,6 @@ public class HomeActivity extends AppCompatActivity {
                             }
                         }//finally
 
-
                         //DB에서 변경했으니 items에서도 변경!!
                         items.get(i).setType("success");
                         //즐겨찾기 설정되어있으면 해제
@@ -445,7 +493,7 @@ public class HomeActivity extends AppCompatActivity {
                         }
 
                     }//check > 0
-                } catch (ParseException e) {
+                catch (ParseException e) {
                     e.printStackTrace();
                 }
             }//default
@@ -497,5 +545,14 @@ public class HomeActivity extends AppCompatActivity {
             //시,분,초 곱한 뒤 밀리세컨즈로 만드려고 *1000
             am.setInexactRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), 24 * 60 * 60 * 1000, sender);
         }
+    }
+
+    private void onClickLogout() {
+        UserManagement.requestLogout(new LogoutResponseCallback() {
+            @Override
+            public void onCompleteLogout() {
+                Toast.makeText(getApplicationContext(), "카카오톡 로그아웃 되었습니다.", Toast.LENGTH_LONG).show();
+            }
+        });
     }
 }

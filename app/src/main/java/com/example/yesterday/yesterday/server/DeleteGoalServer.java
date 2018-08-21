@@ -20,11 +20,11 @@ public class DeleteGoalServer extends AsyncTask<Void,Void,String> {
     private String result;
     //owl wifi 로컬 -> 192.168.0.75
     //조교서버 -> 117.17.142.207
-    private static final String  WEBIP = "192.168.0.75";
+    private static final String  WEBIP = "117.17.142.207";
 
     //addGoalActivity에서 등록한 정보 생성자로 받는다.
-    public DeleteGoalServer(String userID,String food,String type) {
-        this.userID = userID;
+    public DeleteGoalServer(String food,String type) {
+        //this.userID = userID;
         this.food = food;
         this.type = type;
     }
@@ -37,7 +37,7 @@ public class DeleteGoalServer extends AsyncTask<Void,Void,String> {
         RequestBody requestBody = null;
 
         //보낼 데이터를 파라미터 형식으로 body에 넣음
-        requestBody = new FormBody.Builder().add("USERID",userID).add("FOOD",food).add("TYPE",type).build();
+        requestBody = new FormBody.Builder().add("FOOD",food).add("TYPE",type).build();
 
         // post형식으로 url로 만든 body를 보냄
         Request request = new Request.Builder()

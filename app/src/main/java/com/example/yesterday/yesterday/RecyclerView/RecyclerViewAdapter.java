@@ -89,15 +89,15 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 viewHolder.endlayout.setVisibility(View.GONE);
 
                 //undo 버튼 누르면 아이템 삭제
-                viewHolder.undo.setOnClickListener(new View.OnClickListener() {
+                /*viewHolder.undo.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         //아이템 삭제
                         useSwipe = true;
-                        onItemDelete(items.get(viewHolder.getAdapterPosition()).getUserID(), items.get(viewHolder.getAdapterPosition()).getFood()
+                        onItemDelete(items.get(items.get(viewHolder.getAdapterPosition()).getFood()
                                 , items.get(viewHolder.getAdapterPosition()).getType(), viewHolder.getAdapterPosition());
                     }
-                });
+                });*/
                 // Swipedlayout 클릭하면 취소
                 // * 그냥 list 클릭하면 ( isShowSwiped = false && useSwipe = true )로 만들어 swipedlayout 풀리고 regularlayout 나오도록 한 것 *
                 viewHolder.swipedlayout.setOnClickListener(new View.OnClickListener() {
@@ -180,7 +180,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 @Override
                 public void onClick(View v) {
                     Toast.makeText(context, (viewHolder.getAdapterPosition() + 1) + " 번째 : "
-                                    + " / ID : " + items.get(viewHolder.getAdapterPosition()).getUserID()
+                                  //  + " / ID : " + items.get(viewHolder.getAdapterPosition()).getUserID()
                                     + " / Food : " + items.get(viewHolder.getAdapterPosition()).getFood()
                                     + " / CurrentCount : "+items.get(viewHolder.getAdapterPosition()).getCurrentCount()
                                     + " / Count : " + items.get(viewHolder.getAdapterPosition()).getCount()
@@ -212,20 +212,20 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     //아이템 추가
     public void onItemAdd(String userID, String food, int count, String startDate, String endDate, int favorite, String type) {
         //items ArrayList<RecyclerItem> 에 데이터 넣고
-        items.add(new RecyclerItem(userID, food, count, startDate, endDate, favorite, type));
+        items.add(new RecyclerItem(food, count, startDate, endDate, favorite, type));
         //아이템이 추가 되었다고 통지함 -> holder에다가 ?
         //추가는 getItemCount 함으로서 제일 마지막 List 뒤에 삽입됨
         notifyItemInserted(getItemCount());
     }
 
     //아이템 삭제
-    public void onItemDelete(String userID, String food, String type, int position) {
+    public void onItemDelete(String food, String type, int position) {
         try {
             //toast보여주고 deleteItem 해야지 !!
 
             // AsyncTask 객체 생성 -> 목표 정보 userID 와 food 에 맞는 정보 DELETE
             try {
-                result = new DeleteGoalServer(userID, food, type).execute().get();
+                result = new DeleteGoalServer(food, type).execute().get();
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -276,7 +276,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                             public void onClick(DialogInterface dialog, int which) {
 
                                 //변수 초기화
-                                String userID = items.get(viewHolder.getAdapterPosition()).getUserID();
+                               // String userID = items.get(viewHolder.getAdapterPosition()).getUserID();
                                 String food = items.get(viewHolder.getAdapterPosition()).getFood();
                                 String type = items.get(viewHolder.getAdapterPosition()).getType();
                                 int favorite = items.get(viewHolder.getAdapterPosition()).getFavorite();
@@ -292,7 +292,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
                                 // 웹 서버에 DB 연동 요청 (updateFavorite)
                                 try {
-                                    result = new UpdateFavoriteServer(userID, food, type, favorite).execute().get();
+                                    result = new UpdateFavoriteServer(food, type, favorite).execute().get();
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 } finally {
@@ -332,7 +332,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                         public void onClick(DialogInterface dialog, int which) {
 
                             //변수 초기화
-                            String userID = items.get(viewHolder.getAdapterPosition()).getUserID();
+                            //String userID = items.get(viewHolder.getAdapterPosition()).getUserID();
                             String food = items.get(viewHolder.getAdapterPosition()).getFood();
                             String type = items.get(viewHolder.getAdapterPosition()).getType();
                             int favorite = items.get(viewHolder.getAdapterPosition()).getFavorite();
@@ -346,7 +346,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
                             // 웹 서버에 DB 연동 요청 (updateFavorite)
                             try {
-                                result = new UpdateFavoriteServer(userID, food, type, favorite).execute().get();
+                                result = new UpdateFavoriteServer(food, type, favorite).execute().get();
                             } catch (Exception e) {
                                 e.printStackTrace();
                             } finally {
