@@ -21,7 +21,7 @@ public class FoodDataDB extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE FoodData (food TEXT PRIMARY KEY, date TEXT PRIMARY KEY, BLDtime TEXT);");
+        db.execSQL("CREATE TABLE FoodData (food TEXT,date TEXT, BLDtime TEXT,PRIMARY KEY(food,date));");
     }
 
     @Override

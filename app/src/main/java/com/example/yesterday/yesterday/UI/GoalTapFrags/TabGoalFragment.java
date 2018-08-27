@@ -1,5 +1,6 @@
 package com.example.yesterday.yesterday.UI.GoalTapFrags;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -18,6 +19,7 @@ import com.example.yesterday.yesterday.RecyclerView.ItemTouchHelperCallback;
 import com.example.yesterday.yesterday.RecyclerView.RecyclerItem;
 import com.example.yesterday.yesterday.RecyclerView.RecyclerViewAdapter;
 import com.example.yesterday.yesterday.UI.HomeActivity;
+import com.example.yesterday.yesterday.sqlite.ClientGoalDB;
 
 
 import java.util.ArrayList;
@@ -49,6 +51,8 @@ public class TabGoalFragment extends Fragment {
     private String endDate;
     private int favorite;
     private String type;
+    ClientGoalDB clientGoalDB;
+    SQLiteDatabase goalDB;
 
     private Boolean isrun;
 
@@ -68,11 +72,12 @@ public class TabGoalFragment extends Fragment {
     public void onResume() {
         super.onResume();
         Log.d("TAG", "onResume : TapGoalFragment");
+        //adapter = new RecyclerViewAdapter();
 
         //GoalFragment로부터 name 데이터 받음!! -> 목표추가 했을 때 이렇게 데이터 추가 물론 DB에도 저장됨
         Bundle bundle = getArguments();
         if (bundle != null) {
-            userID = bundle.getString("USERID");  //나중에 삭제 예정 전역변수 이용하면 됌.
+            //userID = bundle.getString("USERID");  //나중에 삭제 예정 전역변수 이용하면 됌.
             food = bundle.getString("FOOD");
             count = bundle.getInt("COUNT");
             startDate = bundle.getString("STARTDATE");
@@ -82,7 +87,7 @@ public class TabGoalFragment extends Fragment {
 
             //값들이 null이 아니면 adapter에 item 추가
             if (food != null && count != -1 && endDate != null && favorite != -1 && type != null) {
-                adapter.onItemAdd(userID, food, count, startDate, endDate, favorite, type);
+                //adapter.onItemAdd(food, count, startDate, endDate, favorite, type);
                 //bundle.clear() 해도 bundle을 null로 만들어 버리진 않음;
                 bundle.clear();
             }
@@ -145,8 +150,8 @@ public class TabGoalFragment extends Fragment {
         //animator 설정
         //recyclerView.setItemAnimator(new DefaultItemAnimator());
         //Adapter 생성 , RecyclerView에 적용
-        adapter = new RecyclerViewAdapter(items);
-        recyclerView.setAdapter(adapter);
+       // adapter = new RecyclerViewAdapter(items);
+        //recyclerView.setAdapter(adapter);
 
         //recyclerView를 스크롤 했을 때의 이벤트 처리
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {

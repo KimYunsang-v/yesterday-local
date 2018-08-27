@@ -19,7 +19,8 @@ public class ClientGoalDB extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL("CREATE TABLE ClientGoal (food TEXT PRIMARY KEY, totalCount INT, startDate TEXT, endDate TEXT, favorite INT, type TEXT PRIMARY KEY);");
+        db.execSQL("CREATE TABLE ClientGoal (food TEXT, totalCount INT, startDate TEXT, endDate TEXT, favorite INT, type TEXT, PRIMARY KEY(food,type));");
+        Log.i("create ClientGoal","success");
     }
 
     @Override
@@ -27,26 +28,27 @@ public class ClientGoalDB extends SQLiteOpenHelper {
 
     }
 
-    public void addGoal(String create_at, String food, String totalCount, String startDate, String endDate, int favorite, String type) {
+    public String addGoal(SQLiteDatabase db, String food, int totalCount, String startDate, String endDate, int favorite, String type) {
         // 읽고 쓰기가 가능하게 DB 열기
-        SQLiteDatabase db = getWritableDatabase();
+        //SQLiteDatabase db = getWritableDatabase();
         // DB에 입력한 값으로 행 추가
-        db.execSQL("INSERT INTO ClientGoal VALUES('" + food + "', " + totalCount + ", '" + startDate + ", '" + endDate +", '" + favorite + "'+type +');");
+        db.execSQL("INSERT INTO ClientGoal VALUES('" + food + "', '" + totalCount + "', '" + startDate + "', '" + endDate +"', '" + favorite + "','" +type + "');");
         db.close();
 
         Log.i("addGoal","success");
+
+        return "success";
     }
 
-    public void deleteGoal(String food, String type) {
-        // 읽기가 가능하게 DB 열기
-        SQLiteDatabase db = getWritableDatabase();
-
-        db.execSQL("DELETE FROM ClientGoal WHERE food='" + food + "' and type=" + type + "';");
+    public String deleteGoal(SQLiteDatabase db,String food, String type) {
+        db.execSQL("DELETE FROM ClientGoal WHERE food='" + food + "' and type= '" + type + "';");
 
         Log.i("deleteGoal","success");
+
+        return "success";
     }
 
-    public ArrayList<RecyclerItem> selectGoal() {
+    public ArrayList<RecyclerItem> selectGoal(SQLiteDatabase db) {
         String food = "";
         int count=0;
         String startDate="";
@@ -54,17 +56,21 @@ public class ClientGoalDB extends SQLiteOpenHelper {
         int favorite = 0;
         String type = "";
         // 읽고 쓰기가 가능하게 DB 열기
-        SQLiteDatabase db = getReadableDatabase();
+        //SQLiteDatabase db = getWritableDatabase();
         // DB에 입력한 값으로 행 추가
         Cursor cursor = db.rawQuery("SELECT * FROM ClientGoal ORDER BY endDate ASC;",null);
 
+        if (cursor != null && cursor.getCount() != 0)
+            cursor.moveToFirst();
+
         while(cursor.moveToNext()){
-            food = cursor.getString(1);
-            count = cursor.getInt(2);
-            startDate = cursor.getString(3);
-            endDate = cursor.getString(4);
-            favorite = cursor.getInt(5);
-            type = cursor.getString(6);
+            food = cursor.getString(cursor.getColumnIndex("food"));
+            count = cursor.getInt(cursor.getColumnIndex("totalCount"));
+            startDate = cursor.getString(cursor.getColumnIndex("startDate"));
+            endDate = cursor.getString(cursor.getColumnIndex("endDate"));
+            favorite = cursor.getInt(cursor.getColumnIndex("favorite"));
+            type = cursor.getString(cursor.getColumnIndex("type"));
+            Log.i("selectGoal",food);
 
             items.add(new RecyclerItem(food, count, startDate, endDate, favorite, type));
         }
@@ -75,5 +81,22 @@ public class ClientGoalDB extends SQLiteOpenHelper {
         Log.i("addGoal","success");
 
         return items;
+    }
+
+    public void checkType(String food, int favorite,String type) {
+
+        // 읽고 쓰기가 가능하게 DB 열기
+        SQLiteDatabase db = getReadableDatabase();
+
+        if(favorite == 1) {
+            // DB에 입력한 값으로 행 추가
+            db.rawQuery("update clientgoal set favorite='0' ,type= 'success' where food= '"+ food +"' and type='"+type+"';", null);
+        }
+        else{
+            db.rawQuery("update clientgoal set type= 'success' where food= '"+ food +"' and type='"+type+"';", null);
+        }
+        db.close();
+
+        Log.i("checkType","success");
     }
 }

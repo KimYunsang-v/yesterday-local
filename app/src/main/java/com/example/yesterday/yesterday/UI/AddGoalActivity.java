@@ -2,6 +2,7 @@ package com.example.yesterday.yesterday.UI;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,7 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.yesterday.yesterday.R;
-import com.example.yesterday.yesterday.server.AddGoalServer;
+import com.example.yesterday.yesterday.sqlite.ClientGoalDB;
 
 import org.json.JSONObject;
 
@@ -45,6 +46,12 @@ public class AddGoalActivity extends AppCompatActivity {
 
     String result;
 
+    // clientGoalDB 객체
+    ClientGoalDB clientGoalDB;
+
+    //databse
+    private SQLiteDatabase goalDB;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +60,9 @@ public class AddGoalActivity extends AppCompatActivity {
         foodView = (TextView) findViewById(R.id.goal_edit_food);
         countView = (TextView) findViewById(R.id.goal_edit_count);
         endDateView = (TextView) findViewById(R.id.goal_edit_date);
+
+        clientGoalDB = new ClientGoalDB(AddGoalActivity.this,"ClientGoal",null,1);
+        goalDB = clientGoalDB.getWritableDatabase();
 
 
         //라디오 버튼 TODO: layout은 존재하지만 사용은 안하는 중
@@ -81,7 +91,33 @@ public class AddGoalActivity extends AppCompatActivity {
                 endDate = endDateView.getText().toString();
                 startDate = getDate();
 
-                // AsyncTask 객체 생성 -> 목표 정보 DB에 INSERT
+                result = clientGoalDB.addGoal(goalDB,food,count,startDate,endDate,0,"default");
+
+                if (result.equals("success")) {
+                    //DB 연동 전 intent로 데이터 전송한 것
+                    Intent intent = new Intent();
+                    intent.putExtra("USERID", userID);//나중에 삭제 예정 전역변수 이용하면 됌.
+                    intent.putExtra("FOOD", food);
+                    intent.putExtra("COUNT", count);
+                    intent.putExtra("STARTDATE", startDate);
+                    intent.putExtra("ENDDATE", endDate);
+                    intent.putExtra("FAVORITE", favorite);
+                    intent.putExtra("TYPE",type);
+
+                    //삭제 예정
+                    //intent.putExtra("TYPE", goalType);
+
+                    setResult(RESULT_OK, intent);
+
+                    finish();
+
+                } else {
+                    showOverlap();
+                    Log.d("AddGoalServer", "데이터 저장 실패 (DB 연동 오류 or 기본 키 포함되있어서)");
+                }
+
+
+                /*// AsyncTask 객체 생성 -> 목표 정보 DB에 INSERT
                 try {
                     result = new AddGoalServer(userID, food, count, startDate, endDate, favorite, type).execute().get();
                 } catch (Exception e) {
@@ -109,7 +145,7 @@ public class AddGoalActivity extends AppCompatActivity {
                         showOverlap();
                         Log.d("AddGoalServer", "데이터 저장 실패 (DB 연동 오류 or 기본 키 포함되있어서)");
                     }
-                }
+                }*/
             }
         });
     }

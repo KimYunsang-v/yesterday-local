@@ -1,6 +1,7 @@
 package com.example.yesterday.yesterday.UI.GoalTapFrags;
 
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -18,6 +19,7 @@ import com.example.yesterday.yesterday.RecyclerView.ItemTouchHelperCallback;
 import com.example.yesterday.yesterday.RecyclerView.RecyclerItem;
 import com.example.yesterday.yesterday.RecyclerView.RecyclerViewAdapter;
 import com.example.yesterday.yesterday.UI.HomeActivity;
+import com.example.yesterday.yesterday.sqlite.ClientGoalDB;
 
 import java.util.ArrayList;
 
@@ -41,6 +43,9 @@ public class TabFailFragment extends Fragment {
     ItemTouchHelper itemTouchHelper;
 
     private Boolean isrun;
+
+    ClientGoalDB clientGoalDB;
+    SQLiteDatabase goalDB;
 
     public TabFailFragment() {
         // Required empty public constructor
@@ -96,8 +101,8 @@ public class TabFailFragment extends Fragment {
         //animator 설정
         //recyclerView.setItemAnimator(new DefaultItemAnimator());
         //Adapter 생성 , RecyclerView에 적용
-        adapter = new RecyclerViewAdapter(items);
-        recyclerView.setAdapter(adapter);
+        //adapter = new RecyclerViewAdapter(items);
+        //recyclerView.setAdapter(adapter);
 
         //recyclerView를 스크롤 했을 때의 이벤트 처리
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {

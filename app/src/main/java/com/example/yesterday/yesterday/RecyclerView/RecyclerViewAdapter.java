@@ -2,6 +2,7 @@ package com.example.yesterday.yesterday.RecyclerView;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
@@ -13,8 +14,8 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.yesterday.yesterday.R;
-import com.example.yesterday.yesterday.server.DeleteGoalServer;
 import com.example.yesterday.yesterday.server.UpdateFavoriteServer;
+import com.example.yesterday.yesterday.sqlite.ClientGoalDB;
 
 import java.util.ArrayList;
 
@@ -34,16 +35,25 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     int favoriteCount;
 
+    ClientGoalDB clientGoalDB;
+    SQLiteDatabase goalDB;
+
+
+
     //isSwiped = true 되었을 때 새로운 view로 전환 되는 데 또 스와이프 안되게하려고
     //useSwipe true:swipe 가능 false:swipe 불가
     boolean useSwipe;
 
 
-    public RecyclerViewAdapter(ArrayList<RecyclerItem> items) {
+    public RecyclerViewAdapter(ArrayList<RecyclerItem> items,SQLiteDatabase goalDB, ClientGoalDB clientGoalDB) {
         this.items = items;
         favoriteCount = 0;
         useSwipe = true;
+        this.clientGoalDB = clientGoalDB;
+        this.goalDB = goalDB;
     }
+
+
 
     // View 생성 (한줄짜리 이미지랑 텍스트 들어있는 view) , ViewHolder 호출
     @Override
@@ -74,6 +84,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             viewHolder.headerTitle.setText("Header");
         }
         */
+
+
+
+
         //final을 써줘야 동작.. ??
         if (holder instanceof RecyclerViewHolder) {
             final RecyclerViewHolder viewHolder = (RecyclerViewHolder) holder;
@@ -89,15 +103,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 viewHolder.endlayout.setVisibility(View.GONE);
 
                 //undo 버튼 누르면 아이템 삭제
-                /*viewHolder.undo.setOnClickListener(new View.OnClickListener() {
+                viewHolder.undo.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         //아이템 삭제
                         useSwipe = true;
-                        onItemDelete(items.get(items.get(viewHolder.getAdapterPosition()).getFood()
+                        onItemDelete(items.get(viewHolder.getAdapterPosition()).getFood()
                                 , items.get(viewHolder.getAdapterPosition()).getType(), viewHolder.getAdapterPosition());
+
                     }
-                });*/
+                });
                 // Swipedlayout 클릭하면 취소
                 // * 그냥 list 클릭하면 ( isShowSwiped = false && useSwipe = true )로 만들어 swipedlayout 풀리고 regularlayout 나오도록 한 것 *
                 viewHolder.swipedlayout.setOnClickListener(new View.OnClickListener() {
@@ -210,7 +225,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         }
     */
     //아이템 추가
-    public void onItemAdd(String userID, String food, int count, String startDate, String endDate, int favorite, String type) {
+    public void onItemAdd(String food, int count, String startDate, String endDate, int favorite, String type) {
         //items ArrayList<RecyclerItem> 에 데이터 넣고
         items.add(new RecyclerItem(food, count, startDate, endDate, favorite, type));
         //아이템이 추가 되었다고 통지함 -> holder에다가 ?
@@ -220,15 +235,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     //아이템 삭제
     public void onItemDelete(String food, String type, int position) {
-        try {
             //toast보여주고 deleteItem 해야지 !!
 
             // AsyncTask 객체 생성 -> 목표 정보 userID 와 food 에 맞는 정보 DELETE
-            try {
-                result = new DeleteGoalServer(food, type).execute().get();
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
+                //result = new DeleteGoalServer(food, type).execute().get();
+                result = clientGoalDB.deleteGoal(goalDB,food,type);
 
                 if (result.equals("success")) {
 
@@ -241,10 +252,8 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
                 } else {
                     Toast.makeText(context, "데이터 삭제 실패", Toast.LENGTH_SHORT).show();
                 }
-            }
-        } catch (IndexOutOfBoundsException e) {
-            e.printStackTrace();
-        }
+
+
     }
 
     public ArrayList<RecyclerItem> getItems() {

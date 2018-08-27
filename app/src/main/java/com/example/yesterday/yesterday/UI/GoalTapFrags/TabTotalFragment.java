@@ -1,6 +1,7 @@
 package com.example.yesterday.yesterday.UI.GoalTapFrags;
 
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 
@@ -20,7 +21,7 @@ import com.example.yesterday.yesterday.RecyclerView.ItemTouchHelperCallback;
 import com.example.yesterday.yesterday.RecyclerView.RecyclerItem;
 import com.example.yesterday.yesterday.RecyclerView.RecyclerViewAdapter;
 import com.example.yesterday.yesterday.UI.HomeActivity;
-
+import com.example.yesterday.yesterday.sqlite.ClientGoalDB;
 
 
 import java.util.ArrayList;
@@ -53,6 +54,9 @@ public class TabTotalFragment extends Fragment {
 
     private Boolean isrun;
 
+    ClientGoalDB clientGoalDB;
+    SQLiteDatabase goalDB;
+
     public TabTotalFragment() {
 
         items = new ArrayList<RecyclerItem>();
@@ -84,7 +88,7 @@ public class TabTotalFragment extends Fragment {
 
             //값들이 null이 아니면 adapter에 item 추가
             if (food != null && count != -1 && endDate != null && favorite != -1) {
-                adapter.onItemAdd(userID, food, count, startDate, endDate, favorite ,type);
+                adapter.onItemAdd(food, count, startDate, endDate, favorite ,type);
                 //bundle.clear() 해도 bundle을 null로 만들어 버리진 않음;
                 bundle.clear();
             }
@@ -106,11 +110,22 @@ public class TabTotalFragment extends Fragment {
         }
         */
 
+        // sqlite
+        clientGoalDB = new ClientGoalDB(getActivity(),"ClientGoal",null,1);
+        goalDB = clientGoalDB.getWritableDatabase();
+
         // * 앱 실행 이후 DB로 값 가져오고 생성 될 때만 한 번 RecyclerView에 뿌려주고
         // 이후 추가되는 항목은 onResume에서 별로로 추가 항상 DB에서 가져오면 느려질 것이기 때문 *
         if(isrun) {
             // 목표DB를 저장할 items
             items = ((HomeActivity) getActivity()).getItems();
+            if(items.size()!=0) {
+                Log.i("TotalFragment",""+items.size());
+                Log.i("TotalFragment", items.get(0).getFood());
+            }
+            else{
+                Log.i("TotalFragment", "데이터 없음");
+            }
             //items 한 번 불러오고 난 이후에 false로 전환
             isrun = false;
         }
@@ -142,7 +157,7 @@ public class TabTotalFragment extends Fragment {
         //animator 설정
         //recyclerView.setItemAnimator(new DefaultItemAnimator());
         //Adapter 생성 , RecyclerView에 적용
-        adapter = new RecyclerViewAdapter(items);
+        adapter = new RecyclerViewAdapter(items,goalDB,clientGoalDB);
         recyclerView.setAdapter(adapter);
 
         //recyclerView를 스크롤 했을 때의 이벤트 처리

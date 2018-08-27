@@ -95,8 +95,8 @@ public class TabSuccessFragment extends Fragment {
         //animator 설정
         //recyclerView.setItemAnimator(new DefaultItemAnimator());
         //Adapter 생성 , RecyclerView에 적용
-        adapter = new RecyclerViewAdapter(items);
-        recyclerView.setAdapter(adapter);
+        //adapter = new RecyclerViewAdapter(items);
+        //recyclerView.setAdapter(adapter);
 
         //recyclerView를 스크롤 했을 때의 이벤트 처리
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
